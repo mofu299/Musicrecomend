@@ -6,8 +6,8 @@ from gensim.models import KeyedVectors
 import numpy as np
 
 # ── 読み込み ───────────────────────────
-vectors = np.load("data/my_vectors.npy")                    # shape = (V, D)
-vocab   = np.load("data/my_vocab.npy", allow_pickle=True)   # shape = (V,)
+vectors = np.load("my_vectors.npy")                    # shape = (V, D)
+vocab   = np.load("my_vocab.npy", allow_pickle=True)   # shape = (V,)
 
 # ── KeyedVectors を組み立てる ─────────
 kv = KeyedVectors(vector_size=vectors.shape[1])
