@@ -48,6 +48,5 @@ urllib3==2.0.4
 validators==0.21.2
 zipp==3.16.2
 
-python3-distutils
 setuptools
 wheel
