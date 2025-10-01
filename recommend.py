@@ -4,9 +4,6 @@ import pandas as pd
 from gensim.models import KeyedVectors
 
 # ── 読み込み ───────────────────────────
-vectors = np.load("data/my_vectors.npy")                    # shape = (V, D)
-vocab   = np.load("data/my_vocab.npy", allow_pickle=True)   # shape = (V,)
-
 bpm = np.load("data/combined_vector.npy") 
 title = np.load("data/name.npy", allow_pickle=True)
 
