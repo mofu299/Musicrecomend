@@ -7,7 +7,7 @@ from gensim.models import KeyedVectors
 vectors = np.load("data/my_vectors.npy")                    # shape = (V, D)
 vocab   = np.load("data/my_vocab.npy", allow_pickle=True)   # shape = (V,)
 
-bpm = np.load("data/BPM.npy")
+bpm = np.load("data/combined_vector.npy") 
 title = np.load("data/name.npy", allow_pickle=True)
 
 # ── KeyedVectors を組み立てる ─────────
