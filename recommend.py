@@ -4,6 +4,7 @@ import pandas as pd
 from gensim.models import KeyedVectors
 
 # ── 読み込み ───────────────────────────
+#bpmだけまだ前段階のデータ
 bpm = np.load("data/combined_vector.npy", allow_pickle=True) 
 title = np.load("data/name.npy", allow_pickle=True)
 
@@ -11,13 +12,15 @@ title = np.load("data/name.npy", allow_pickle=True)
 valence = np.load("data/valence.npy")  # 楽曲の感情的なポジティブさ（0から1の範囲）
 energy = np.load("data/energy.npy")  # 曲のエネルギー、活発さ（0から1の範囲）
 danceability = np.load("data/danceability.npy")  # 踊りやすさ、リズムの強さ（0から1の範囲）
-mood = np.array([valence, energy, danceability]).T  # 3つをまとめた2次元配列（曲ごとの特徴ベクトル）
+loudness = np.load("data/loudness.npy")  # 曲の音量レベル（デシベル単位）
+mood = np.array([valence, energy, danceability,loudness]).T  # 3つをまとめた2次元配列（曲ごとの特徴ベクトル）
 
 # 各感情の特徴ベクトル（ターゲット特徴量）
-happy_target = np.array([1, 1, 0.8])  # ポジティブ、活発、踊りやすい
-sad_target = np.array([0.2, 0.5, 0.2])  # ネガティブ、落ち着き、低め
-relaxed_target = np.array([0, 0.7, 0.4])  # 中間、落ち着き、中間
-energetic_target = np.array([1, 1, 1])  # ポジティブ、活発、踊りやすい
+happy_target = np.array([1, 1, 0.8, -5])  # ポジティブ、活発、踊りやすい、強め
+sad_target = np.array([0, 0, 0.2, 0.-10])  # ネガティブ、落ち着き、低め、弱め
+relaxed_target = np.array([0, 0.4, 0, -20])  # 中間、落ち着き、中間、中間
+energetic_target = np.array([1, 1, 1, -5])  # ポジティブ、活発、踊りやすい、強め
+
 
 # 特徴量の選択肢
 feature_options = {
@@ -59,28 +62,33 @@ if selected_feature:
     url = f"https://www.google.com/search?q={best_track}+楽曲"
     st.markdown(f"[ {best_track}をGoogleで検索]({url})")
 
+# 「BPM」に変更
+run_options = {
+    "ストレッチ" : 60,
+    "ウォーキング": 120,
+    "ジョギング" : 145,
+    "ランニング": 170,
+}
+# 運動量の選択
+selected_run = st.selectbox("特徴量を選んでください", list(run_options.keys()))
+# 条件に応じてスコアを変更
+run_scores = run_options[selected_run]
+st.markdown("#テーマに対して似ている曲を表示する")
+
+if selected_run:
+    st.markdown(f"### {selected_run} に関連する曲")
+    results = []
+    best_score = -1  # 初期値として最小スコアを設定
+    best_track = ""
     
-st.markdown("## 複数の曲を選んでおすすめの曲を表示する")
-selected_tracks = st.multiselect("曲を複数選んでください", track_titles)
+    # 選択された特徴量を基に、最も類似した曲を探す
+    for recommend_track, score in kv.most_similar(run_scores, topn=30):
+        results.append({"title": recommend_track, "score": score})
+        if score > best_score:
+            best_score = score
+            best_track = recommend_track
+    
+    st.dataframe(pd.DataFrame(results))
+    url = f"https://www.google.com/search?q={best_track}+楽曲"
+    st.markdown(f"[ {best_track}をGoogleで検索]({url})")
 
-if selected_tracks:
-    try:
-        selected_vectors = [kv[t] for t in selected_tracks if t in kv]
-        user_vector = np.mean(selected_vectors, axis=0)
-
-        st.markdown(f"### {selected_tracks} に似ている曲")
-        results = []
-        best_score = 0
-        best_track = ""
-        for recommend_track, score in kv.similar_by_vector(user_vector, topn=30):
-            if recommend_track not in selected_tracks:
-                results.append({"title": recommend_track, "score": score})
-                if score > best_score:
-                    best_score = score
-                    best_track = recommend_track
-        st.dataframe(pd.DataFrame(results))
-
-        url = f"https://www.google.com/search?q={best_track}+楽曲"
-        st.markdown(f"[ {best_track}をGoogleで検索]({url})")
-    except KeyError:
-        st.error("選択した曲の一部がベクトルに存在しません。")
