@@ -19,7 +19,7 @@ mood = np.array([valence, energy, danceability,loudness]).T  # 3つをまとめ�
 happy_target = np.array([1, 1, 0.8, -5])  # ポジティブ、活発、踊りやすい、強め
 sad_target = np.array([0, 0, 0.2, 0.-10])  # ネガティブ、落ち着き、低め、弱め
 relaxed_target = np.array([0, 0.4, 0, -20])  # 中間、落ち着き、中間、中間
-energetic_target = np.array([1, 1, 1, -5])  # ポジティブ、活発、踊りやすい、強め
+energetic_target = np.array([1, 1, 1, -2.5])  # ポジティブ、活発、踊りやすい、強め
 
 
 # 特徴量の選択肢
@@ -59,8 +59,6 @@ if selected_feature:
             best_track = recommend_track
     
     st.dataframe(pd.DataFrame(results))
-    url = f"https://www.google.com/search?q={best_track}+楽曲"
-    st.markdown(f"[ {best_track}をGoogleで検索]({url})")
 
 # 「BPM」に変更
 run_options = {
