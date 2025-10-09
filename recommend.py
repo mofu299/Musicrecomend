@@ -43,10 +43,10 @@ kv.fill_norms()
 st.write("楽曲レコメンドアプリ")
 
 # ここを修正: 検索リストを「曲のタイトル」に変更
-st.markdown("#テーマに対して似ている曲を表示する")
+#st.markdown("#テーマに対して似ている曲を表示する")
 results = []
 if selected_feature:
-    st.markdown(f"### {selected_feature} に関連する曲")
+    #st.markdown(f"### {selected_feature} に関連する曲")
     best_score = -1  # 初期値として最小スコアを設定
     best_track = ""
     
@@ -57,7 +57,8 @@ if selected_feature:
             best_score = score
             best_track = recommend_track
     
-    st.dataframe(pd.DataFrame(results))
+    #st.dataframe(pd.DataFrame(results))
+    pd.DataFrame(results)
 
 #resultsのスコアとBPMを組み合わせて、運動量に応じた曲を推薦
 stretch = np.array([1, 60])
@@ -73,10 +74,10 @@ run_options = {
     "ランニング": run
 }
 # 運動量の選択
-selected_run = st.selectbox("特徴量を選んでください", run_options.keys())
+selected_run = st.selectbox("運動量を選んでください", run_options.keys())
 # 条件に応じてスコアを変更
 run_scores = run_options[selected_run]
-st.markdown("#テーマに対して似ている曲を表示する")
+#st.markdown("#テーマに対して似ている曲を表示する")
 
 #resultのスコアを取り出す
 score_results = np.array([results[i]["score"] for i in range(len(results))])
