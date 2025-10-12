@@ -11,6 +11,7 @@ energy = np.load("data/energy.npy")  # 曲のエネルギー、活発さ（0か�
 danceability = np.load("data/danceability.npy")  # 踊りやすさ、リズムの強さ（0から1の範囲）
 loudness = np.load("data/loudness.npy")  # 曲の音量レベル（デシベル単位）
 object = np.array([valence, energy, danceability,loudness,bpm]).T  # 5つをまとめた2次元配列（曲ごとの特徴ベクトル）
+seconds = np.load("data/time.npy", allow_pickle=True) #楽曲の再生時間(タイトルと楽曲の再生時間)
 
 # 各感情の特徴ベクトル（ターゲット特徴量）
 happy_target = np.array([1, 1, 0.8, -5])  # ポジティブ、活発、踊りやすい、強め
@@ -62,6 +63,12 @@ kv = KeyedVectors(vector_size=5)  # moodのベクトル次元数を使う
 kv.add_vectors(title.tolist(), object)  # 曲名をキーとして、moodをベクトルとして追加
 kv.fill_norms()
 
+#時間計算
+def get_h_m_s(sec):
+    m, s = divmod(sec, 60)
+    h, m = divmod(m, 60)
+    return h, ":", m, ":", s
+
 st.write("楽曲レコメンドアプリ")
 
 # ここを修正: 検索リストを「曲のタイトル」に変更
@@ -81,3 +88,16 @@ if selected_feature:
     
     st.dataframe(pd.DataFrame(results))
     pd.DataFrame(results)
+
+    #総再生時間を計算する
+    #secondsとresultsのタイトルが一致するものの秒数を取り出す
+    final = np.array([seconds[i, 1] for i in range(len(seconds)) if seconds[i, 0] in [results[j]["title"] for j in range(len(results))]])
+    t = 0 #総再生時間
+    for i in range(len(final)):
+        t += final[i]
+    st.write("再生時間は")
+    times = get_h_m_s(t)
+    st.write(times)
+
+
+
