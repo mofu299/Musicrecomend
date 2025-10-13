@@ -107,7 +107,7 @@ if self:
     times = get_h_m_s(t)
     #表示の仕方を変更させる必要あり
     st.write(times)
-    st.dataframe(pd.DataFrame(results[i] for i in range(count)))
+    st.dataframe(pd.DataFrame(results[i]["title"] for i in range(count)))
 
 
 
