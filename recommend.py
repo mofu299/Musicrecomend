@@ -55,9 +55,6 @@ run_scores = run_options[selected_run]
 #選択されたムードと運動量を合体して、スコアを作成
 total_select = np.concatenate([target_scores, run_scores]).T
 
-print(len(title))
-print(object.size)
-
 # KeyedVectorsを選択肢に応じて生成
 kv = KeyedVectors(vector_size=5)  # moodのベクトル次元数を使う
 kv.add_vectors(title.tolist(), object)  # 曲名をキーとして、moodをベクトルとして追加
@@ -67,7 +64,7 @@ kv.fill_norms()
 def get_h_m_s(sec):
     m, s = divmod(sec, 60)
     h, m = divmod(m, 60)
-    return h, ":", m, ":", s
+    return int(h),":",int(m) , ":", int(s)
 
 st.write("楽曲レコメンドアプリ")
 
@@ -85,19 +82,32 @@ if selected_feature:
         if score > best_score:
             best_score = score
             best_track = recommend_track
-    
-    st.dataframe(pd.DataFrame(results))
     pd.DataFrame(results)
+
+self = st.slider(label='時間を選択してください',
+                    min_value=5,
+                    max_value=120,
+                    value=30,
+                    )
+st.write(f'{self}' + "分のプレイリストを作成します")
 
     #総再生時間を計算する
     #secondsとresultsのタイトルが一致するものの秒数を取り出す
+if self:
     final = np.array([seconds[i, 1] for i in range(len(seconds)) if seconds[i, 0] in [results[j]["title"] for j in range(len(results))]])
     t = 0 #総再生時間
+    count = 0 #プレイリストの楽曲数
     for i in range(len(final)):
         t += final[i]
+        count += 1
+        if(self<=(t/60)):
+            print(t/60)
+            break
     st.write("再生時間は")
     times = get_h_m_s(t)
+    #表示の仕方を変更させる必要あり
     st.write(times)
+    st.dataframe(pd.DataFrame(results[i] for i in range(count)))
 
 
 
