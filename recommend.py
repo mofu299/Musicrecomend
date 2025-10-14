@@ -101,7 +101,6 @@ if self:
         t += final[i]
         count += 1
         if(self<=(t/60)):
-            print(t/60)
             break
     st.write("再生時間は")
     times = get_h_m_s(t)

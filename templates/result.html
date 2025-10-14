@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>推薦結果</title>
+</head>
+<body>
+    <h1>{{ input_song }} に似ている曲</h1>
+
+    {% if error %}
+        <p style="color:red;">{{ error }}</p>
+    {% else %}
+        <ul>
+        {% for song in recommended %}
+            <li>{{ song.title }} (スコア: {{ song.score }})</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+    <a href="/">戻る</a>
+</body>
+</html>

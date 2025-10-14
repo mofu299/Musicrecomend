@@ -1,0 +1,46 @@
+body {
+    background-color: black;
+    font-family: "メイリオ";
+    color: rgb(255, 255, 255);
+}
+
+ /* ボタンのグループ化 */
+
+.button-group button{
+  background-color: #000000;
+  color: #fff;
+  padding: 10px 30px;
+  text-decoration: none;
+  font-size: 1em;
+  border: none;
+  margin-right: 10px;
+}
+.button-group button:hover {
+  background-color: rgb(255, 51, 24);
+  color: black;
+  opacity: 0.8;
+}
+/* クリックされた時の色 */
+.button-group button.selected {
+  background-color: yellowgreen;  
+  color: black;            
+}
+
+/* スライダー */
+input[type=range] {
+    width: 300px;
+    height: 6px;
+    background: yellowgreen;
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #000;
+    border-radius: 50%;
+    cursor: pointer;
+}
