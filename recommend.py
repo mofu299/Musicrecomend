@@ -33,6 +33,15 @@ selected_feature = st.selectbox("ムードを選んでください", list(featur
 # 条件に応じてスコアを変更
 target_scores = feature_options[selected_feature]
 
+# sadが選ばれた場合、danceabilityが0.62未満の曲に絞る(楽曲がぶれてしまうため。)
+if selected_feature == "sad":
+    mask1 = danceability < 0.62
+    title, bpm, valence, energy, danceability, loudness, seconds = [
+        arr[mask1] for arr in [title, bpm, valence, energy, danceability, loudness, seconds]
+    ]
+
+    object = np.array([valence, energy, danceability, loudness, bpm]).T
+
 #運動量に応じたBPM
 stretch = np.array([60])
 work = np.array([120])

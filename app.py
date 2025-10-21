@@ -1,6 +1,4 @@
-from flask import Flask, render_template, request
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
+from flask import Flask, render_template, request, jsonify
 import numpy as np
 import pandas as pd
 from gensim.models import KeyedVectors
@@ -9,111 +7,171 @@ from gensim.models import KeyedVectors
 app = Flask(__name__)
 
 # データ読み込み
-title = np.load("data/name.npy", allow_pickle=True) #曲名
-bpm = np.load("data/bpm.npy") #BPM
+title = np.load("data/name.npy", allow_pickle=True)  # 曲名
+bpm = np.load("data/bpm.npy")  # BPM
 valence = np.load("data/valence.npy")  # 楽曲の感情的なポジティブさ（0から1の範囲）
 energy = np.load("data/energy.npy")  # 曲のエネルギー、活発さ（0から1の範囲）
 danceability = np.load("data/danceability.npy")  # 踊りやすさ、リズムの強さ（0から1の範囲）
 loudness = np.load("data/loudness.npy")  # 曲の音量レベル（デシベル単位）
-object = np.array([valence, energy, danceability,loudness,bpm]).T  # 5つをまとめた2次元配列（曲ごとの特徴ベクトル）
-seconds = np.load("data/time.npy", allow_pickle=True) #楽曲の再生時間(タイトルと楽曲の再生時間)
+object = np.array([valence, energy, danceability, loudness, bpm]).T  # 5つをまとめた2次元配列（曲ごとの特徴ベクトル）
+seconds = np.load("data/seconds.npy", allow_pickle=True)  # 楽曲の再生時間(タイトルと楽曲の再生時間)
 
 # 各感情の特徴ベクトル（ターゲット特徴量）
-happy_target = np.array([1, 1, 0.8, -5])  # ポジティブ、活発、踊りやすい、強め
-sad_target = np.array([0, 0, 0.2, -10])  # ネガティブ、落ち着き、低め、弱め
-relaxed_target = np.array([0, 0.4, 0, -20])  # 中間、落ち着き、中間、中間
-energetic_target = np.array([1, 1, 1, -2.5])  # ポジティブ、活発、踊りやすい、強め
+mood_targets = {
+    "happy": np.array([1, 1, 0.8, -5]),  # ポジティブ、活発、踊りやすい、強め
+    "sad": np.array([0, 0, 0.2, -10]),  # ネガティブ、落ち着き、低め、弱め
+    "relaxed": np.array([0, 0.4, 0, -20]),  # 中間、落ち着き、中間、中間
+    "energetic": np.array([1, 1, 1, -2.5])  # ポジティブ、活発、踊りやすい、強め
+}
+# 運動量に応じたBPM
+excersise_targets = {
+    "ストレッチ": np.array([60]),
+    "ウォーキング": np.array([120]),
+    "ジョギング": np.array([145]),
+    "ランニング": np.array([170])
+}
 
-#運動量に応じたBPM
-stretch = np.array([60])
-work = np.array([120])
-jog = np.array([145])
-run = np.array([170])
+# 参照用のマップ
+title = title.astype(str)
+title_to_idx = {t: i for i, t in enumerate(title)}
+secs_map = {str(row[0]): float(row[1]) for row in seconds}
 
 # -------------------------
 # トップページ
 # -------------------------
-#@app.route("/")
-#def index():
-#    return render_template("index.html", titles=title.tolist())
-
-
 @app.route("/", methods=["GET"])
 def index():
     """トップページ（入力フォームの表示）"""
-    # 選択された値はGETリクエストでは必要ないので、シンプルにテンプレートを返す
     return render_template("index.html")
 
 @app.route("/recommend", methods=["POST"])
 def recommend():
-    
-    # 1. request.form から、ムードと運動量の値を取得
-    #    HTMLの hidden input の name属性 ("mood", "exercise") を使用
-    selected_mood = request.form.get("mood")
-    selected_exercise = request.form.get("exercise")
-    
-    # 2. スライダーの値を取得
-    selected_time = request.form.get("time")
+    selected_mood = request.form.get("mood", "").strip()
+    selected_exercise = request.form.get("exercise", "").strip()
+    selected_time_min = request.form.get("time", "0").strip()
 
-    # 3. データ処理（推薦ロジックの実行）
-    # 例: printして確認
-    print(f"ムード: {selected_mood}, 運動量: {selected_exercise}, 時間: {selected_time}で推薦を実行します。")
-    
-    # ここに、推薦アルゴリズムやデータベース検索のコードを記述します
-    # KeyedVectorsを選択肢に応じて生成
-    kv = KeyedVectors(vector_size=5)  # moodのベクトル次元数を使う
-    kv.add_vectors(title.tolist(), object)  # 曲名をキーとして、moodをベクトルとして追加
-    kv.fill_norms()
+    print(f"ムード: {selected_mood}, 運動量: {selected_exercise}, 時間: {selected_time_min}")
 
-    results = []
-    best_score = -1  # 初期値として最小スコアを設定
-    best_track = ""
-    
-    total_select = dataset(selected_mood,selected_exercise)
-    # 選択された特徴量を基に、最も類似した曲を探す
-    for recommend_track, score in kv.most_similar(total_select, topn=30):
-        results.append({"title": recommend_track, "score": score})
-        if score > best_score:
-            best_score = score
-            best_track = recommend_track
-    pd.DataFrame(results)
-ここから
-    #総再生時間を計算する
-    #secondsとresultsのタイトルが一致するものの秒数を取り出す
-if self:
-    final = np.array([seconds[i, 1] for i in range(len(seconds)) if seconds[i, 0] in [results[j]["title"] for j in range(len(results))]])
-    t = 0 #総再生時間
-    count = 0 #プレイリストの楽曲数
-    for i in range(len(final)):
-        t += final[i]
-        count += 1
-        if(self<=(t/60)):
+    # 入力チェック
+    if not selected_mood or not selected_exercise:
+        return jsonify({"error": "ムードと運動量を選択してください。"})
+
+    try:
+        target_minutes = max(0, int(float(selected_time_min)))
+    except ValueError:
+        return jsonify({"error": "時間の値が不正です。"})
+
+    # ---- フィルタ（sad の場合は valence < 0.5だけ残す）----
+    indices = np.arange(len(title))
+    if selected_mood == "sad":
+        mask = valence < 0.5
+        indices = indices[mask]
+
+    # KeyedVectors（必要ならフィルタ適用後で再構築）
+    kv = build_kv(filtered_indices=indices)
+
+    # ターゲットベクトル
+    target_vec = make_target_vector(selected_mood, selected_exercise)
+    if target_vec is None:
+        return jsonify({"error": "入力値が不正です。"})
+
+    # 類似上位を取得（とりあえず多めにとって後段でBPM/時間で絞る）
+    topn = min(200, len(indices)) if len(indices) > 0 else 0
+    if topn == 0:
+        return jsonify({"error": "該当曲がありません。"})
+
+    sim_list = kv.most_similar(target_vec, topn=topn)  # [(title, score), ...]
+
+    # BPM/倍拍でフィルタし、時間で詰める
+    target_bpm = float(excersise_targets[selected_exercise])
+    picked = []
+    total_sec = 0.0
+
+    for rec_title, score in sim_list:
+        idx = title_to_idx.get(rec_title)
+        if idx is None:
+            continue
+        tr_bpm = float(bpm[idx]) if idx < len(bpm) else 0.0
+        if not bpm_is_ok(tr_bpm, target_bpm, tol=0.08):
+            continue  # 目標BPM or 倍拍に合わない
+
+        dur = secs_map.get(rec_title, 0.0)
+        if dur <= 0:
+            continue
+
+        picked.append({
+            "title": rec_title,
+            "bpm": int(round(tr_bpm)),
+            "valence": float(valence[idx]),
+            "energy": float(energy[idx]),
+            "danceability": float(danceability[idx]),
+            "score": float(score),
+            "duration": int(dur)
+        })
+        total_sec += dur
+        if total_sec >= target_minutes * 60:
             break
-    st.write("再生時間は")
-    times = get_h_m_s(t)
-    #表示の仕方を変更させる必要あり
-    st.write(times)
-    st.dataframe(pd.DataFrame(results[i]["title"] for i in range(count)))
 
-    recommended_songs = ["おすすめ曲 A", "おすすめ曲 B", "おすすめ曲 C"] 
-    
-    # 4. 結果テンプレートをレンダリングしてユーザーに返す
-    return render_template(
-        "result.html", 
-        songs=recommended_songs
-    )
+    if not picked:
+        return jsonify({"error": "条件に合う曲が見つかりませんでした。検索条件(BPM許容やムード)を少し広げてください。"})
 
-#スコア作成
+    # 見やすい並びに整形（score降順）
+    picked = sorted(picked, key=lambda x: x["score"], reverse=True)
+
+    # 合計時間
+    total_hms = hms(total_sec)
+
+    return jsonify({
+        "error": None,
+        "input_mood": selected_mood,
+        "input_exercise": selected_exercise,
+        "input_time": target_minutes,
+        "total_time": total_hms,
+        "recommended": picked
+    })
+
+# スコア作成
 def dataset(mood, excercise):
-    #選択されたムードと運動量を合体して、スコアを作成
+    # 選択されたムードと運動量を合体して、スコアを作成
     total_select = np.concatenate([mood, excercise]).T
     return total_select
 
-#時間計算
-def get_h_m_s(sec):
-    m, s = divmod(sec, 60)
+# 時間計算
+def hms(sec: float):
+    m, s = divmod(int(sec), 60)
     h, m = divmod(m, 60)
-    return int(h),":",int(m) , ":", int(s)
+    return f"{h:02d}:{m:02d}:{s:02d}"
+
+# フィルタリング後のKeyedVectors作成
+def build_kv(filtered_indices=None):
+    kv = KeyedVectors(vector_size=5)
+    if filtered_indices is None:
+        kv.add_vectors(title.tolist(), object)
+    else:
+        kv.add_vectors(title[filtered_indices].tolist(), object[filtered_indices])
+    kv.fill_norms()
+    return kv
+
+# 選択されたムードと運動量からターゲットベクトルを作成
+def make_target_vector(selected_mood: str, selected_exercise: str):
+    print(f"選択されたムード: {selected_mood}, 運動量: {selected_exercise}")
+    if selected_mood not in mood_targets or selected_exercise not in excersise_targets:
+        return None
+    mood_vec = mood_targets[selected_mood]                # (4,)
+    bpm_target = np.array([float(excersise_targets[selected_exercise])])  # (1,)
+    total_vec = np.concatenate([mood_vec, bpm_target])    # (5,)
+    print(f"ターゲットベクトル: {total_vec}")
+    return total_vec
+
+# BPMフィルタリング
+# BPMが目標BPM or 倍拍(半分)に十分近いか判定。
+# tol=0.08 は ±8% の許容。
+def bpm_is_ok(track_bpm: float, target_bpm: float, tol=0.08):
+    if track_bpm <= 0:
+        return False
+    close_direct = abs(track_bpm - target_bpm) <= target_bpm * tol
+    close_double = abs(track_bpm - (target_bpm / 2.0)) <= (target_bpm / 2.0) * tol  # 倍拍対応
+    return close_direct or close_double
 
 # -------------------------
 if __name__ == "__main__":

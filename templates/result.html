@@ -1,21 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-    <title>推薦結果</title>
+  <meta charset="UTF-8" />
+  <title>推薦結果</title>
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
 </head>
 <body>
-    <h1>{{ input_song }} に似ている曲</h1>
+  <h1>推薦結果</h1>
 
-    {% if error %}
-        <p style="color:red;">{{ error }}</p>
-    {% else %}
-        <ul>
-        {% for song in recommended %}
-            <li>{{ song.title }} (スコア: {{ song.score }})</li>
+  {% if error %}
+    <p style="color:#ff6b6b;">{{ error }}</p>
+    <p><a href="/">戻る</a></p>
+  {% else %}
+    <p>ムード: {{ input_mood }}／運動量: {{ input_exercise }}／目標: {{ input_time }} 分</p>
+    <p>合計再生時間: {{ total_time }}</p>
+
+    <table border="0" cellpadding="6">
+      <thead>
+        <tr>
+          <th>#</th><th>タイトル</th><th>BPM</th><th>Danceability</th><th>Energy</th><th>Valence</th><th>Score</th><th>長さ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in recommended %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ s.title }}</td>
+            <td style="text-align:right">{{ s.bpm }}</td>
+            <td style="text-align:right">{{ '%.2f'|format(s.danceability) }}</td>
+            <td style="text-align:right">{{ '%.2f'|format(s.energy) }}</td>
+            <td style="text-align:right">{{ '%.2f'|format(s.valence) }}</td>
+            <td style="text-align:right">{{ '%.3f'|format(s.score) }}</td>
+            <td style="text-align:right">{{ (s.duration // 60) }}:{{ '%02d'|format(s.duration % 60) }}</td>
+          </tr>
         {% endfor %}
-        </ul>
-    {% endif %}
+      </tbody>
+    </table>
 
-    <a href="/">戻る</a>
+    <p><a href="/">条件を変えてもう一度</a></p>
+  {% endif %}
 </body>
 </html>

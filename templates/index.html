@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link href="css/style.css" rel="stylesheet" type="text/css" />
-    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" type="text/css" />
+    <link href="css/style.css" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" type="text/css">
     <meta charset="UTF-8">
     <title>楽曲レコメンドアプリ</title>
 </head>
@@ -32,12 +32,14 @@
             <input type="range" id="time" name="time" min="0" max="120" value="5">
             <span id="timeValue">120</span>
             
-            <a href="/recommend" class="buttonRec disabled-link" id="playlistLink">
+            <button type="submit" id="playlistLink" class="buttonRec disabled-link">
                 プレイリストを生成
-            </a>
+            </button>
         </form>
         
         <script src="{{ url_for('static', filename='js/script.js') }}"></script>
         <script src="{{ url_for('static', filename='js/slider.js') }}"></script>
+        <div id="result"></div>  <!-- 結果を表示する部分 -->
+
 </body>
 </html>
