@@ -11,7 +11,7 @@ energy = np.load("data/energy.npy")  # 曲のエネルギー、活発さ（0か�
 danceability = np.load("data/danceability.npy")  # 踊りやすさ、リズムの強さ（0から1の範囲）
 loudness = np.load("data/loudness.npy")  # 曲の音量レベル（デシベル単位）
 object = np.array([valence, energy, danceability,loudness,bpm]).T  # 5つをまとめた2次元配列（曲ごとの特徴ベクトル）
-seconds = np.load("data/time.npy", allow_pickle=True) #楽曲の再生時間(タイトルと楽曲の再生時間)
+seconds = np.load("data/seconds.npy", allow_pickle=True) #楽曲の再生時間(タイトルと楽曲の再生時間)
 
 # 各感情の特徴ベクトル（ターゲット特徴量）
 happy_target = np.array([1, 1, 0.8, -5])  # ポジティブ、活発、踊りやすい、強め

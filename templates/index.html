@@ -1,53 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link href="style.css" rel="stylesheet" type="text/css" />
+    <link href="css/style.css" rel="stylesheet" type="text/css" />
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" type="text/css" />
     <meta charset="UTF-8">
     <title>楽曲レコメンドアプリ</title>
 </head>
 <body>
-
     <h1>楽曲レコメンドアプリ</h1>
-    <form action="/recommend" method="post" id="exerciseForm">
-    <label>ムードを選択</label>
-    <div class="button-group group1">
-    <button type="button" class="button01">happy</a> <!-- happy -->
-    <button type="button" class="button01">sad</a> <!-- sad -->
-    <button type="button" class="button01">relaxed</a> <!-- relaxed -->
-    <button type="button" class="button01">energetic</a> <!-- energetic -->
-    </div>
-    <input type="hidden" name="mood" id="moodInput">
+        
+        <form action="/recommend" method="post" id="mainForm">
+            
+            <label>ムードを選択</label>
+            <div class="button-group group1">
+            <button type="button" class="button01">happy</a> <!-- happy -->
+            <button type="button" class="button01">sad</a> <!-- sad -->
+            <button type="button" class="button01">relaxed</a> <!-- relaxed -->
+            <button type="button" class="button01">energetic</a> <!-- energetic -->
+            </div>
+            <input type="hidden" name="mood" id="moodInput">
 
-    <label>運動量を選択</label>
-        <div class="button-group group2">
-    <button type="button" class="button01">ウォーキング</a> <!-- happy -->
-    <button type="button" class="button01">ジョギング</a> <!-- sad -->
-    <button type="button" class="button01">ランニング</a> <!-- relaxed -->
-    </div>
-    <input type="hidden" name="exercise" id="exerciseInput">
-    <button type="submit">送信</button><!--これは後で-->
-    </form>
+            <label>運動量を選択</label>
+            <div class="button-group group2">
+            <button type="button" class="button01">ウォーキング</a> <!-- working -->
+            <button type="button" class="button01">ジョギング</a> <!-- jogging -->
+            <button type="button" class="button01">ランニング</a> <!-- running -->
+            </div>
+            <input type="hidden" name="exercise" id="exerciseInput">
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-
-    <form action="/recommend" method="post">
-    <label for="volume">音量を選択:</label>
-    <input type="range" id="volume" name="volume" min="0" max="100" value="50">
-    <span id="volumeValue">50</span>
-
-    <button type="submit">送信</button>
-    </form>
-
-
-    <form action="/recommend" method="post">
-        <label>曲名を選択してください：</label>
-        <select name="song">
-            {% for t in titles %}
-                <option value="{{ t }}">{{ t }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit">推薦する</button>
-    </form>
+            <label for="time">時間を選択</label>
+            <input type="range" id="time" name="time" min="0" max="120" value="5">
+            <span id="timeValue">120</span>
+            
+            <a href="/recommend" class="buttonRec disabled-link" id="playlistLink">
+                プレイリストを生成
+            </a>
+        </form>
+        
+        <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/slider.js') }}"></script>
 </body>
 </html>

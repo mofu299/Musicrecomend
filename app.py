@@ -18,6 +18,18 @@ loudness = np.load("data/loudness.npy")  # 曲の音量レベル（デシベル�
 object = np.array([valence, energy, danceability,loudness,bpm]).T  # 5つをまとめた2次元配列（曲ごとの特徴ベクトル）
 seconds = np.load("data/time.npy", allow_pickle=True) #楽曲の再生時間(タイトルと楽曲の再生時間)
 
+# 各感情の特徴ベクトル（ターゲット特徴量）
+happy_target = np.array([1, 1, 0.8, -5])  # ポジティブ、活発、踊りやすい、強め
+sad_target = np.array([0, 0, 0.2, -10])  # ネガティブ、落ち着き、低め、弱め
+relaxed_target = np.array([0, 0.4, 0, -20])  # 中間、落ち着き、中間、中間
+energetic_target = np.array([1, 1, 1, -2.5])  # ポジティブ、活発、踊りやすい、強め
+
+#運動量に応じたBPM
+stretch = np.array([60])
+work = np.array([120])
+jog = np.array([145])
+run = np.array([170])
+
 # -------------------------
 # トップページ
 # -------------------------
@@ -26,45 +38,82 @@ seconds = np.load("data/time.npy", allow_pickle=True) #楽曲の再生時間(タ
 #    return render_template("index.html", titles=title.tolist())
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 def index():
-    selected = None
-    if request.method == "POST":
-        selected = request.form.get("exercise")  # 選択された運動量
-    return render_template("index.html", selected=selected)
+    """トップページ（入力フォームの表示）"""
+    # 選択された値はGETリクエストでは必要ないので、シンプルにテンプレートを返す
+    return render_template("index.html")
 
-@app.route("/", methods=["GET", "POST"])
-def index0():
-    volume = None
-    if request.method == "POST":
-        volume = request.form.get("volume")  # スライダーの値
-    return render_template("index.html", volume=volume)
+@app.route("/recommend", methods=["POST"])
+def recommend():
+    
+    # 1. request.form から、ムードと運動量の値を取得
+    #    HTMLの hidden input の name属性 ("mood", "exercise") を使用
+    selected_mood = request.form.get("mood")
+    selected_exercise = request.form.get("exercise")
+    
+    # 2. スライダーの値を取得
+    selected_time = request.form.get("time")
 
-# -------------------------
-# 推薦ページ
-# -------------------------
-#@app.route("/recommend", methods=["POST"])
-#def recommend():
-    input_song = request.form["song"]  # フォームから曲名取得
+    # 3. データ処理（推薦ロジックの実行）
+    # 例: printして確認
+    print(f"ムード: {selected_mood}, 運動量: {selected_exercise}, 時間: {selected_time}で推薦を実行します。")
+    
+    # ここに、推薦アルゴリズムやデータベース検索のコードを記述します
+    # KeyedVectorsを選択肢に応じて生成
+    kv = KeyedVectors(vector_size=5)  # moodのベクトル次元数を使う
+    kv.add_vectors(title.tolist(), object)  # 曲名をキーとして、moodをベクトルとして追加
+    kv.fill_norms()
 
-    # 入力曲のインデックスを取得
-    try:
-        idx = np.where(title == input_song)[0][0]
-    except IndexError:
-        return render_template("result.html", input_song=input_song, recommended=[], error="曲が見つかりません。")
+    results = []
+    best_score = -1  # 初期値として最小スコアを設定
+    best_track = ""
+    
+    total_select = dataset(selected_mood,selected_exercise)
+    # 選択された特徴量を基に、最も類似した曲を探す
+    for recommend_track, score in kv.most_similar(total_select, topn=30):
+        results.append({"title": recommend_track, "score": score})
+        if score > best_score:
+            best_score = score
+            best_track = recommend_track
+    pd.DataFrame(results)
+ここから
+    #総再生時間を計算する
+    #secondsとresultsのタイトルが一致するものの秒数を取り出す
+if self:
+    final = np.array([seconds[i, 1] for i in range(len(seconds)) if seconds[i, 0] in [results[j]["title"] for j in range(len(results))]])
+    t = 0 #総再生時間
+    count = 0 #プレイリストの楽曲数
+    for i in range(len(final)):
+        t += final[i]
+        count += 1
+        if(self<=(t/60)):
+            break
+    st.write("再生時間は")
+    times = get_h_m_s(t)
+    #表示の仕方を変更させる必要あり
+    st.write(times)
+    st.dataframe(pd.DataFrame(results[i]["title"] for i in range(count)))
 
-    # 類似度計算（コサイン類似度）
-    input_vector = features[idx].reshape(1, -1)
-    similarity = cosine_similarity(features, input_vector).flatten()
+    recommended_songs = ["おすすめ曲 A", "おすすめ曲 B", "おすすめ曲 C"] 
+    
+    # 4. 結果テンプレートをレンダリングしてユーザーに返す
+    return render_template(
+        "result.html", 
+        songs=recommended_songs
+    )
 
-    # 自分自身は除外
-    similarity[idx] = -1
+#スコア作成
+def dataset(mood, excercise):
+    #選択されたムードと運動量を合体して、スコアを作成
+    total_select = np.concatenate([mood, excercise]).T
+    return total_select
 
-    # 上位10曲を取得
-    top_indices = similarity.argsort()[::-1][:10]
-    recommended = [{"title": title[i], "score": round(similarity[i], 4)} for i in top_indices]
-
-    return render_template("result.html", input_song=input_song, recommended=recommended, error=None)
+#時間計算
+def get_h_m_s(sec):
+    m, s = divmod(sec, 60)
+    h, m = divmod(m, 60)
+    return int(h),":",int(m) , ":", int(s)
 
 # -------------------------
 if __name__ == "__main__":

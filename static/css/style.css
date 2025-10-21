@@ -9,11 +9,12 @@ body {
 .button-group button{
   background-color: #000000;
   color: #fff;
-  padding: 10px 30px;
+  padding: 10px 50px;
   text-decoration: none;
   font-size: 1em;
   border: none;
   margin-right: 10px;
+  border-radius:30px;
 }
 .button-group button:hover {
   background-color: rgb(255, 51, 24);
@@ -27,20 +28,103 @@ body {
 }
 
 /* スライダー */
+/* スライダー本体: CSS変数を設定するためのコンテナとして機能 */
 input[type=range] {
+    -webkit-appearance: none;
     width: 300px;
     height: 6px;
-    background: yellowgreen;
+    background: transparent; /* 背景色は透明にして疑似要素に任せる */
     border-radius: 3px;
     outline: none;
-    -webkit-appearance: none;
+    /*スライダーの進行度を保持するCSS変数を定義 */
+    --track-progress: 0%; /* 初期値 */
+}
+
+/* WebKit (Chrome/Safari) のトラック設定 */
+input[type=range]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  /*CSS変数を使ってグラデーションを定義 */
+  background: linear-gradient(
+    to right, 
+    #26ff22 0%, 
+    #26ff22 var(--track-progress), /* 変数まで緑に塗りつぶす */
+    #444 var(--track-progress),    /* 変数から右側をグレーにする */
+    #444 100%
+  );
+}
+
+/* Firefox のトラック設定 */
+input[type=range]::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  /* FirefoxでもCSS変数が使えます */
+  background: linear-gradient(
+    to right, 
+    #26ff22 0%, 
+    #26ff22 var(--track-progress),
+    #444 var(--track-progress),
+    #444 100%
+  );
 }
 
 input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 20px;
     height: 20px;
+    margin-top: -8px;
     background: #000;
     border-radius: 50%;
-    cursor: pointer;
+      box-shadow: 
+    0 0 10px #fff,
+    0 0 20px #fff,
+    0 0 40px #4eff22,
+    0 0 60px #0cae0c;
+  cursor: pointer;
+  transition: all 0.3s ease; /* アニメーション */
+}
+
+/* hover時に色を変える */
+input[type=range]::-webkit-slider-thumb:hover {
+  background: #000;
+  box-shadow: 
+    0 0 10px #20f827,
+    0 0 20px #fff,
+    0 0 40px #fff,
+    0 0 60px #228dff;
+}
+
+input[type=range]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #000;
+  cursor: pointer;
+}
+
+/*推薦ボタン*/
+.buttonRec {
+  background-color: #fff;
+  border: solid 2px #197030;
+  color: #19701c;
+  border-radius: 20px;
+  padding: 10px 30px;
+  text-decoration: none;
+  font-size: 1em;
+  box-shadow: 0 5px 0 #19701f;
+  display: inline-block;
+  transition: .3s;
+}
+
+.buttonRec:hover {
+  color: #000000;
+  transform: translateY(5px);
+  box-shadow: 0 0 0 #000000;
+}
+/* 無効状態を表現 */
+.buttonRec.disabled-link {
+    opacity: 0.5; /* 透明度を下げて、無効に見せる */
+    cursor: not-allowed; /* マウスカーソルを禁止マークに変更 */
+    pointer-events: none; /* 非常に重要: クリックイベント自体を無効化（保険） */
+    text-decoration: none; /* 下線なども消す場合は追加 */
 }
