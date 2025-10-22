@@ -14,18 +14,17 @@ energy = np.load("data/energy.npy")  # 曲のエネルギー、活発さ（0か�
 danceability = np.load("data/danceability.npy")  # 踊りやすさ、リズムの強さ（0から1の範囲）
 loudness = np.load("data/loudness.npy")  # 曲の音量レベル（デシベル単位）
 object = np.array([valence, energy, danceability, loudness, bpm]).T  # 5つをまとめた2次元配列（曲ごとの特徴ベクトル）
-seconds = np.load("data/seconds.npy", allow_pickle=True)  # 楽曲の再生時間(タイトルと楽曲の再生時間)
+seconds = np.load("data/seconds.npy", allow_pickle=True)  # タイトルと楽曲の再生時間(秒)とアーティスト名と時間(分、秒)
 
 # 各感情の特徴ベクトル（ターゲット特徴量）
 mood_targets = {
     "happy": np.array([1, 1, 0.8, -5]),  # ポジティブ、活発、踊りやすい、強め
-    "sad": np.array([0, 0, 0.2, -10]),  # ネガティブ、落ち着き、低め、弱め
+    "sad": np.array([0, 0.1, 0.2, -10]),  # ネガティブ、落ち着き、低め、弱め
     "relaxed": np.array([0, 0.4, 0, -20]),  # 中間、落ち着き、中間、中間
     "energetic": np.array([1, 1, 1, -2.5])  # ポジティブ、活発、踊りやすい、強め
 }
 # 運動量に応じたBPM
 excersise_targets = {
-    "ストレッチ": np.array([60]),
     "ウォーキング": np.array([120]),
     "ジョギング": np.array([145]),
     "ランニング": np.array([170])
@@ -61,10 +60,22 @@ def recommend():
     except ValueError:
         return jsonify({"error": "時間の値が不正です。"})
 
-    # ---- フィルタ（sad の場合は valence < 0.5だけ残す）----
+    # ---- フィルタ（sad の場合は danceability < 0.62だけ残す）----
     indices = np.arange(len(title))
     if selected_mood == "sad":
-        mask = valence < 0.5
+        mask = danceability < 0.62
+        indices = indices[mask]
+    
+    if selected_mood == "relaxed":
+        mask = danceability < 0.5 and energy < 0.5
+        indices = indices[mask]
+    
+    if selected_mood == "energetic":
+        mask = danceability >= 0.5 and energy >= 0.5
+        indices = indices[mask]
+
+    if selected_mood == "happy":
+        mask = danceability >= 0.62
         indices = indices[mask]
 
     # KeyedVectors（必要ならフィルタ適用後で再構築）
@@ -106,7 +117,9 @@ def recommend():
             "energy": float(energy[idx]),
             "danceability": float(danceability[idx]),
             "score": float(score),
-            "duration": int(dur)
+            "duration": int(dur),
+            "hh_mm": seconds[idx][3] if idx < len(seconds) else "",
+            "artist": seconds[idx][2] if idx < len(seconds) else ""
         })
         total_sec += dur
         if total_sec >= target_minutes * 60:
@@ -164,14 +177,13 @@ def make_target_vector(selected_mood: str, selected_exercise: str):
     return total_vec
 
 # BPMフィルタリング
-# BPMが目標BPM or 倍拍(半分)に十分近いか判定。
+# BPMが目標BPMに十分近いか判定。
 # tol=0.08 は ±8% の許容。
-def bpm_is_ok(track_bpm: float, target_bpm: float, tol=0.08):
+def bpm_is_ok(track_bpm: float, target_bpm: float, tol=0.5):
     if track_bpm <= 0:
         return False
     close_direct = abs(track_bpm - target_bpm) <= target_bpm * tol
-    close_double = abs(track_bpm - (target_bpm / 2.0)) <= (target_bpm / 2.0) * tol  # 倍拍対応
-    return close_direct or close_double
+    return close_direct
 
 # -------------------------
 if __name__ == "__main__":

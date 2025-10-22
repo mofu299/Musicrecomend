@@ -4,15 +4,14 @@
     <link href="css/style.css" rel="stylesheet" type="text/css">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" type="text/css">
     <meta charset="UTF-8">
-    <title>楽曲レコメンドアプリ</title>
 </head>
 <body>
-    <h1>楽曲レコメンドアプリ</h1>
+    <h1>Fit Music</h1>
         
         <form action="/recommend" method="post" id="mainForm">
-            
-            <label>ムードを選択</label>
+            <div class="combine1">
             <div class="button-group group1">
+            <label>ムードを選択</label><br>
             <button type="button" class="button01">happy</a> <!-- happy -->
             <button type="button" class="button01">sad</a> <!-- sad -->
             <button type="button" class="button01">relaxed</a> <!-- relaxed -->
@@ -20,21 +19,25 @@
             </div>
             <input type="hidden" name="mood" id="moodInput">
 
-            <label>運動量を選択</label>
             <div class="button-group group2">
+            <label>運動量を選択</label><br>
             <button type="button" class="button01">ウォーキング</a> <!-- working -->
             <button type="button" class="button01">ジョギング</a> <!-- jogging -->
             <button type="button" class="button01">ランニング</a> <!-- running -->
             </div>
             <input type="hidden" name="exercise" id="exerciseInput">
+            </div>
 
-            <label for="time">時間を選択</label>
+            <div class = "combine2">
+            <label for="time">時間を選択</label><br>
             <input type="range" id="time" name="time" min="0" max="120" value="5">
-            <span id="timeValue">120</span>
-            
+            <span id="timeValue">60</span>
+            </div>
+            <div class = "combine2">
             <button type="submit" id="playlistLink" class="buttonRec disabled-link">
-                プレイリストを生成
+            プレイリストを生成
             </button>
+            </div>
         </form>
         
         <script src="{{ url_for('static', filename='js/script.js') }}"></script>

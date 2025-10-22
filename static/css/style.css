@@ -4,6 +4,21 @@ body {
     color: rgb(255, 255, 255);
 }
 
+ /* ボタン達の配置をまとめる */
+.combine1 {
+  display: flex;
+  flex-direction: row;  /* 横並びに変更 */
+  justify-content: center;  /* 水平方向で中央揃え */
+  gap: 20px;  /* ボタン間のスペース */
+}
+/*スライダーを中央揃え*/
+.combine2 {
+  display: flex;
+  justify-content: center;  /* 水平方向で中央揃え */
+  margin-top: 20px;  /* 上部のスペース */
+}
+
+
  /* ボタンのグループ化 */
 
 .button-group button{
@@ -15,6 +30,9 @@ body {
   border: none;
   margin-right: 10px;
   border-radius:30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
 }
 .button-group button:hover {
   background-color: rgb(255, 51, 24);
@@ -127,4 +145,63 @@ input[type=range]::-moz-range-thumb {
     cursor: not-allowed; /* マウスカーソルを禁止マークに変更 */
     pointer-events: none; /* 非常に重要: クリックイベント自体を無効化（保険） */
     text-decoration: none; /* 下線なども消す場合は追加 */
+}
+
+/* プレイリストの表示 */
+.playlist-container {
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.tracks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+
+.track {
+    display: flex;
+    align-items: center;  /* 横並びにする */
+    background-color: #1e1e1e;
+    padding: 10px;
+    border-radius: 5px;
+    justify-content: space-between;  /* 要素を横並びにして、間隔を調整 */
+}
+
+.track-number {
+    font-weight: bold;
+    color: #1db954; /* 曲番号を目立たせる */
+    margin-right: 15px;
+}
+
+.track-title {
+    display: flex;
+    flex-direction: column;  /* タイトルとアーティストを縦に並べる */
+    font-weight: bold;
+    margin-bottom: 5px;
+    margin-left: 15px;
+}
+
+.track-artist {
+    font-style: italic;
+    color: #bbb;
+}
+
+.track-time, .track-bpm {
+    color: #aaa;
+}
+
+.total-time {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 1.2em;
+}
+
+#total-time {
+    font-weight: bold;
 }

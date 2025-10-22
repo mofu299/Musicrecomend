@@ -75,14 +75,26 @@ playlistLink.addEventListener("click", async (e) => {
     if (data.error) {
         document.getElementById("result").innerHTML = `<p style="color:red;">${data.error}</p>`;
     } else {
-        // 推薦された曲を表示
-        const recommendedSongs = data.recommended.map(song => `
-            <li>${song.title} - BPM: ${song.bpm} - Score: ${song.score}</li>
+        // 曲情報をリスト形式で表示
+        const recommendedSongs = data.recommended.map((song, index) => `
+            <div class="track">
+                <span class="track-number">${index + 1}</span>
+                <div class="track-title"><!-- タイトルとアーティスト名を前後におく -->
+                    <span>${song.title}</span>  <!-- タイトル -->
+                    <span class="track-artist">${song.artist}</span>  <!-- アーティスト名 -->
+                </div>
+                <span class="track-time">${song.hh_mm}</span>
+                <span class="track-bpm">${song.bpm} BPM</span>
+            </div>
         `).join('');
+
+        // 合計再生時間の表示
         document.getElementById("result").innerHTML = `
-            <p>ムード: ${data.input_mood} | 運動量: ${data.input_exercise} | 時間: ${data.input_time} 分</p>
+            <h2>生成されたプレイリスト</h2>
             <p>合計再生時間: ${data.total_time}</p>
-            <ul>${recommendedSongs}</ul>
+            <div class="tracks-list">
+                ${recommendedSongs}
+            </div>
         `;
     }
 });
