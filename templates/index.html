@@ -3,6 +3,7 @@
 <head>
     <link href="css/style.css" rel="stylesheet" type="text/css">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <meta charset="UTF-8">
 </head>
 <body>
@@ -11,7 +12,7 @@
         <form action="/recommend" method="post" id="mainForm">
             <div class="combine1">
             <div class="button-group group1">
-            <label>ムードを選択</label><br>
+            <h3 class="section-title"><i class="fa-solid fa-music" style="color: #ff2222"></i>ムードを選択</h3>
             <button type="button" class="button01">happy</a> <!-- happy -->
             <button type="button" class="button01">sad</a> <!-- sad -->
             <button type="button" class="button01">relaxed</a> <!-- relaxed -->
@@ -20,20 +21,23 @@
             <input type="hidden" name="mood" id="moodInput">
 
             <div class="button-group group2">
-            <label>運動量を選択</label><br>
+            <h3 class="section-title"><i class="fa-solid fa-bolt" style="color: #FFD43B;"></i>運動量を選択</h3>
             <button type="button" class="button01">ウォーキング</a> <!-- working -->
             <button type="button" class="button01">ジョギング</a> <!-- jogging -->
             <button type="button" class="button01">ランニング</a> <!-- running -->
             </div>
             <input type="hidden" name="exercise" id="exerciseInput">
             </div>
-
+            
             <div class = "combine2">
-            <label for="time">時間を選択</label><br>
+            <h3 class="section-title"><i class="fa-regular fa-clock" style="color: #78ff0a;"></i>時間を選択</h3>
+            <div class="time-container">
             <input type="range" id="time" name="time" min="0" max="60" value="5">
             <span id="timeValue">60</span>
             </div>
-            <div class = "combine2">
+            </div>
+            
+            <div class = "combine1">
             <button type="submit" id="playlistLink" class="buttonRec disabled-link">
             プレイリストを生成
             </button>

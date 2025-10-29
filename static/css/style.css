@@ -11,13 +11,24 @@ body {
   justify-content: center;  /* 水平方向で中央揃え */
   gap: 20px;  /* ボタン間のスペース */
 }
-/*スライダーを中央揃え*/
-.combine2 {
-  display: flex;
-  justify-content: center;  /* 水平方向で中央揃え */
-  margin-top: 20px;  /* 上部のスペース */
+
+.combine2{
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 32px auto 0;
+  max-width: 900px;
 }
 
+/* スライダーと数字を横並び・中央寄せ */
+.time-container{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width: 100%;
+  justify-content: center;
+}
 
  /* ボタンのグループ化 */
 
@@ -44,6 +55,13 @@ body {
   background-color: yellowgreen;  
   color: black;            
 }
+/* ボタンタイトルの変更 */
+.section-title { display:flex; align-items:center; gap:8px; margin:24px 0 12px; }
+.section-title i1 {
+  color: #ff2222;
+  margin-right: 6px;
+}
+
 
 /* スライダー */
 /* スライダー本体: CSS変数を設定するためのコンテナとして機能 */
