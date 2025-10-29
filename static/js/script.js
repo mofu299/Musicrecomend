@@ -85,6 +85,7 @@ playlistLink.addEventListener("click", async (e) => {
                 </div>
                 <span class="track-time">${song.hh_mm}</span>
                 <span class="track-bpm">${song.bpm} BPM</span>
+                <a class="open-link" href="${song.spotify_search}" target="_blank" rel="noopener">Spotifyで探す</a>
             </div>
         `).join('');
 

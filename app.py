@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import numpy as np
 import pandas as pd
+import urllib.parse
 from gensim.models import KeyedVectors
 
 # Flaskアプリ
@@ -67,11 +68,11 @@ def recommend():
         indices = indices[mask]
     
     if selected_mood == "relaxed":
-        mask = danceability < 0.5 and energy < 0.5
+        mask = danceability < 0.5
         indices = indices[mask]
     
     if selected_mood == "energetic":
-        mask = danceability >= 0.5 and energy >= 0.5
+        mask = danceability >= 0.5
         indices = indices[mask]
 
     if selected_mood == "happy":
@@ -93,7 +94,6 @@ def recommend():
 
     sim_list = kv.most_similar(target_vec, topn=topn)  # [(title, score), ...]
 
-    # BPM/倍拍でフィルタし、時間で詰める
     target_bpm = float(excersise_targets[selected_exercise])
     picked = []
     total_sec = 0.0
@@ -103,12 +103,18 @@ def recommend():
         if idx is None:
             continue
         tr_bpm = float(bpm[idx]) if idx < len(bpm) else 0.0
-        if not bpm_is_ok(tr_bpm, target_bpm, tol=0.08):
-            continue  # 目標BPM or 倍拍に合わない
+        if not bpm_is_ok(tr_bpm, target_bpm, tol=0.1):
+            continue  # 目標BPM
 
         dur = secs_map.get(rec_title, 0.0)
         if dur <= 0:
             continue
+
+        # Spotify検索URL作成
+        artist_name = seconds[idx][2] if idx < len(seconds) else ""
+        query = rec_title if not artist_name else f"{rec_title} {artist_name}"
+        sp_search_url = "https://open.spotify.com/search/" + urllib.parse.quote(query)
+
 
         picked.append({
             "title": rec_title,
@@ -119,7 +125,8 @@ def recommend():
             "score": float(score),
             "duration": int(dur),
             "hh_mm": seconds[idx][3] if idx < len(seconds) else "",
-            "artist": seconds[idx][2] if idx < len(seconds) else ""
+            "artist": artist_name,
+            "spotify_search": sp_search_url
         })
         total_sec += dur
         if total_sec >= target_minutes * 60:
@@ -130,6 +137,7 @@ def recommend():
 
     # 見やすい並びに整形（score降順）
     picked = sorted(picked, key=lambda x: x["score"], reverse=True)
+    np.random.shuffle(picked)  # ランダムにシャッフル
 
     # 合計時間
     total_hms = hms(total_sec)
@@ -179,7 +187,7 @@ def make_target_vector(selected_mood: str, selected_exercise: str):
 # BPMフィルタリング
 # BPMが目標BPMに十分近いか判定。
 # tol=0.08 は ±8% の許容。
-def bpm_is_ok(track_bpm: float, target_bpm: float, tol=0.5):
+def bpm_is_ok(track_bpm: float, target_bpm: float, tol=0.3):
     if track_bpm <= 0:
         return False
     close_direct = abs(track_bpm - target_bpm) <= target_bpm * tol

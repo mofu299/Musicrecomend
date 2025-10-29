@@ -205,3 +205,13 @@ h1 {
 #total-time {
     font-weight: bold;
 }
+
+.open-link {
+  padding: 6px 10px;
+  border-radius: 14px;
+  border: 1px solid #1db954;
+  color: #1db954;
+  text-decoration: none;
+  font-size: 0.9em;
+}
+.open-link:hover { background: #1db954; color: #000; }
