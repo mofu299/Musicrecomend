@@ -61,25 +61,8 @@ def recommend():
     except ValueError:
         return jsonify({"error": "時間の値が不正です。"})
 
-    # ---- フィルタ（sad の場合は danceability < 0.62だけ残す）----
     indices = np.arange(len(title))
-    if selected_mood == "sad":
-        mask = danceability < 0.62
-        indices = indices[mask]
-    
-    if selected_mood == "relaxed":
-        mask = danceability < 0.5
-        indices = indices[mask]
-    
-    if selected_mood == "energetic":
-        mask = danceability >= 0.5
-        indices = indices[mask]
-
-    if selected_mood == "happy":
-        mask = danceability >= 0.62
-        indices = indices[mask]
-
-    # KeyedVectors（必要ならフィルタ適用後で再構築）
+    # KeyedVectors
     kv = build_kv(filtered_indices=indices)
 
     # ターゲットベクトル
@@ -95,6 +78,15 @@ def recommend():
     sim_list = kv.most_similar(target_vec, topn=topn)  # [(title, score), ...]
 
     target_bpm = float(excersise_targets[selected_exercise])
+
+    # ---- danceabilityターゲットを設定 ----
+    mood_dance_target = {
+        "sad": 0.2,
+        "relaxed": 0.4,
+        "happy": 0.8,
+        "energetic": 1.0
+    }.get(selected_mood, 0.5)
+
     picked = []
     total_sec = 0.0
 
@@ -110,6 +102,15 @@ def recommend():
         if dur <= 0:
             continue
 
+        d = float(danceability[idx])
+        d_diff = abs(d - mood_dance_target)
+
+        # danceabilityの近さスコア（近いほど高評価）
+        dance_score = 1.0 - d_diff  # 0〜1の範囲
+
+        # 総合スコア：KeyedVectorsの類似度＋danceability補正
+        combined_score = score * 0.7 + dance_score * 0.3
+
         # Spotify検索URL作成
         artist_name = seconds[idx][2] if idx < len(seconds) else ""
         query = rec_title if not artist_name else f"{rec_title} {artist_name}"
@@ -123,6 +124,8 @@ def recommend():
             "energy": float(energy[idx]),
             "danceability": float(danceability[idx]),
             "score": float(score),
+            "dance_score": dance_score,
+            "combined_score": combined_score,
             "duration": int(dur),
             "hh_mm": seconds[idx][3] if idx < len(seconds) else "",
             "artist": artist_name,
@@ -136,7 +139,7 @@ def recommend():
         return jsonify({"error": "条件に合う曲が見つかりませんでした。検索条件(BPM許容やムード)を少し広げてください。"})
 
     # 見やすい並びに整形（score降順）
-    picked = sorted(picked, key=lambda x: x["score"], reverse=True)
+    picked = sorted(picked, key=lambda x: x["combined_score"], reverse=True)
     np.random.shuffle(picked)  # ランダムにシャッフル
 
     # 合計時間
