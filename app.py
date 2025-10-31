@@ -63,7 +63,7 @@ def recommend():
 
     indices = np.arange(len(title))
     # KeyedVectors
-    kv = build_kv(filtered_indices=indices)
+    kv = build_kv(indices)
 
     # ターゲットベクトル
     target_vec = make_target_vector(selected_mood, selected_exercise)
@@ -167,12 +167,12 @@ def hms(sec: float):
     return f"{h:02d}:{m:02d}:{s:02d}"
 
 # フィルタリング後のKeyedVectors作成
-def build_kv(filtered_indices=None):
+def build_kv(indices=None):
     kv = KeyedVectors(vector_size=5)
-    if filtered_indices is None:
+    if indices is None:
         kv.add_vectors(title.tolist(), object)
     else:
-        kv.add_vectors(title[filtered_indices].tolist(), object[filtered_indices])
+        kv.add_vectors(title[indices].tolist(), object[indices])
     kv.fill_norms()
     return kv
 
