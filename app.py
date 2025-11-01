@@ -190,7 +190,7 @@ def make_target_vector(selected_mood: str, selected_exercise: str):
 # BPMフィルタリング
 # BPMが目標BPMに十分近いか判定。
 # tol=0.08 は ±8% の許容。
-def bpm_is_ok(track_bpm: float, target_bpm: float, tol=0.3):
+def bpm_is_ok(track_bpm: float, target_bpm: float, tol=0.08):
     if track_bpm <= 0:
         return False
     close_direct = abs(track_bpm - target_bpm) <= target_bpm * tol
