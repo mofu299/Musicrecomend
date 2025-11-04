@@ -26,9 +26,9 @@ mood_targets = {
 }
 # 運動量に応じたBPM
 excersise_targets = {
-    "ウォーキング": np.array([120]),
-    "ジョギング": np.array([145]),
-    "ランニング": np.array([170])
+    "ウォーキング120BPM": np.array([120]),
+    "ジョギング145BPM": np.array([145]),
+    "ランニング170BPM": np.array([170])
 }
 
 # 参照用のマップ
@@ -77,70 +77,124 @@ def recommend():
 
     sim_list = kv.most_similar(target_vec, topn=topn)  # [(title, score), ...]
 
-    target_bpm = float(excersise_targets[selected_exercise])
+    target_bpm = float(excersise_targets[selected_exercise][0])
+    mood_dance_target = float(mood_targets[selected_mood][2])
 
-    # ---- danceabilityターゲットを設定 ----
-    mood_dance_target = {
-        "sad": 0.2,
-        "relaxed": 0.4,
-        "happy": 0.8,
-        "energetic": 1.0
-    }.get(selected_mood, 0.5)
+    def try_make_playlist(tol_bpm_local: float, tol_dance_local: float,target_seconds_local: float):
+        picked_local = []
+        total_sec_local = 0.0
+
+        for rec_title, score in sim_list:
+            idx = title_to_idx.get(rec_title)
+            if idx is None:
+                continue
+
+            tr_bpm = float(bpm[idx]) if idx < len(bpm) else 0.0
+            if not bpm_is_ok(tr_bpm, target_bpm, tol=tol_bpm_local):
+                continue
+
+            tr_dance = float(danceability[idx]) if idx < len(danceability) else 0.0
+            if not danceablity_is_ok(tr_dance, mood_dance_target, tol_dance_local):
+                continue
+
+            dur = secs_map.get(rec_title, 0.0)
+            if dur <= 0:
+                continue
+
+            d = tr_dance
+            d_diff = abs(d - mood_dance_target)
+            dance_score = 1.0 - d_diff  # 0〜1
+
+            combined_score = score * 0.7 + dance_score * 0.3
+
+            artist_name = seconds[idx][2] if idx < len(seconds) else ""
+            query = rec_title if not artist_name else f"{rec_title} {artist_name}"
+            sp_search_url = "https://open.spotify.com/search/" + urllib.parse.quote(query)
+
+            picked_local.append({
+                "title": rec_title,
+                "bpm": int(round(tr_bpm)),
+                "valence": float(valence[idx]),
+                "energy": float(energy[idx]),
+                "danceability": d,
+                "score": float(score),
+                "dance_score": dance_score,
+                "combined_score": combined_score,
+                "duration": int(dur),
+                "hh_mm": seconds[idx][3] if idx < len(seconds) else "",
+                "artist": artist_name,
+                "spotify_search": sp_search_url
+            })
+
+            total_sec_local += dur
+            if total_sec_local >= target_seconds_local:
+                break
+
+        picked_local.sort(key=lambda x: x["combined_score"], reverse=True)
+        return picked_local, total_sec_local
 
     picked = []
     total_sec = 0.0
+    # 初期 tol
+    tol_bpm = 0.08        # BPM ±8%
+    tol_dance = 0.08      # danceability ±8% 相対許容
+    target_seconds = target_minutes * 60
+    attempt = 0
+    max_try = 6
 
-    for rec_title, score in sim_list:
-        idx = title_to_idx.get(rec_title)
-        if idx is None:
-            continue
-        tr_bpm = float(bpm[idx]) if idx < len(bpm) else 0.0
-        if not bpm_is_ok(tr_bpm, target_bpm, tol=0.1):
-            continue  # 目標BPM
-
-        dur = secs_map.get(rec_title, 0.0)
-        if dur <= 0:
-            continue
-
-        d = float(danceability[idx])
-        d_diff = abs(d - mood_dance_target)
-
-        # danceabilityの近さスコア（近いほど高評価）
-        dance_score = 1.0 - d_diff  # 0〜1の範囲
-
-        # 総合スコア：KeyedVectorsの類似度＋danceability補正
-        combined_score = score * 0.7 + dance_score * 0.3
-
-        # Spotify検索URL作成
-        artist_name = seconds[idx][2] if idx < len(seconds) else ""
-        query = rec_title if not artist_name else f"{rec_title} {artist_name}"
-        sp_search_url = "https://open.spotify.com/search/" + urllib.parse.quote(query)
-
-
-        picked.append({
-            "title": rec_title,
-            "bpm": int(round(tr_bpm)),
-            "valence": float(valence[idx]),
-            "energy": float(energy[idx]),
-            "danceability": float(danceability[idx]),
-            "score": float(score),
-            "dance_score": dance_score,
-            "combined_score": combined_score,
-            "duration": int(dur),
-            "hh_mm": seconds[idx][3] if idx < len(seconds) else "",
-            "artist": artist_name,
-            "spotify_search": sp_search_url
-        })
-        total_sec += dur
-        if total_sec >= target_minutes * 60:
+    while attempt < max_try:
+        picked, total_sec = try_make_playlist(tol_bpm, tol_dance, target_seconds)
+        #秒数が足りていたら成功
+        if picked and total_sec >= target_seconds:
             break
+        # 条件を緩和して再トライ
 
-    if not picked:
-        return jsonify({"error": "条件に合う曲が見つかりませんでした。検索条件(BPM許容やムード)を少し広げてください。"})
+        tol_dance = min(tol_dance * 1.5, 0.50)
+        attempt += 1
+
+    # フォールバック：まだ 0 件なら danceability を無視して時間埋め
+    if (not picked) or (total_sec < target_seconds):
+        total_sec = 0.0
+        picked = []
+        for rec_title, score in sim_list:
+            idx = title_to_idx.get(rec_title)
+            if idx is None:
+                continue
+            dur = secs_map.get(rec_title, 0.0)
+            if dur <= 0:
+                continue
+            tr_bpm = float(bpm[idx]) if idx < len(bpm) else 0.0
+            if not bpm_is_ok(tr_bpm, target_bpm, tol=0.08):
+                continue
+            d = float(danceability[idx]) if idx < len(danceability) else 0.0
+            d_diff = abs(d - mood_dance_target)
+            dance_score = 1.0 - d_diff
+            combined_score = score * 0.7 + dance_score * 0.3
+
+            artist_name = seconds[idx][2] if idx < len(seconds) else ""
+            query = rec_title if not artist_name else f"{rec_title} {artist_name}"
+            sp_search_url = "https://open.spotify.com/search/" + urllib.parse.quote(query)
+
+            picked.append({
+                "title": rec_title,
+                "bpm": int(round(tr_bpm)),
+                "valence": float(valence[idx]),
+                "energy": float(energy[idx]),
+                "danceability": d,
+                "score": float(score),
+                "dance_score": dance_score,
+                "combined_score": combined_score,
+                "duration": int(dur),
+                "hh_mm": seconds[idx][3] if idx < len(seconds) else "",
+                "artist": artist_name,
+                "spotify_search": sp_search_url
+            })
+            total_sec += dur
+            if total_sec >= target_minutes * 60:
+                break
 
     # 見やすい並びに整形（score降順）
     picked = sorted(picked, key=lambda x: x["combined_score"], reverse=True)
-    np.random.shuffle(picked)  # ランダムにシャッフル
 
     # 合計時間
     total_hms = hms(total_sec)
@@ -154,19 +208,13 @@ def recommend():
         "recommended": picked
     })
 
-# スコア作成
-def dataset(mood, excercise):
-    # 選択されたムードと運動量を合体して、スコアを作成
-    total_select = np.concatenate([mood, excercise]).T
-    return total_select
-
 # 時間計算
 def hms(sec: float):
     m, s = divmod(int(sec), 60)
     h, m = divmod(m, 60)
     return f"{h:02d}:{m:02d}:{s:02d}"
 
-# フィルタリング後のKeyedVectors作成
+# KeyedVectors作成
 def build_kv(indices=None):
     kv = KeyedVectors(vector_size=5)
     if indices is None:
@@ -196,6 +244,9 @@ def bpm_is_ok(track_bpm: float, target_bpm: float, tol=0.08):
     close_direct = abs(track_bpm - target_bpm) <= target_bpm * tol
     return close_direct
 
+def danceablity_is_ok(track_danceability: float, mood_dance_target: float, tol):
+    close_direct = abs(track_danceability - mood_dance_target) <= mood_dance_target * tol
+    return close_direct
 # -------------------------
 if __name__ == "__main__":
     app.run(debug=True)

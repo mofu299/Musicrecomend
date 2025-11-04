@@ -8,6 +8,9 @@
 </head>
 <body>
     <h1>Fit Music</h1>
+        <header class="header">
+            <h1 class="header-title">あなたの運動に<span style="color: rgb(0, 255, 0)">最適な音楽</span>を見つけよう</h1>
+        </header>
         
         <form action="/recommend" method="post" id="mainForm">
             <div class="combine1">
@@ -22,18 +25,17 @@
 
             <div class="button-group group2">
             <h3 class="section-title"><i class="fa-solid fa-bolt" style="color: #FFD43B;"></i>運動量を選択</h3>
-            <button type="button" class="button01">ウォーキング</a> <!-- working -->
-            <button type="button" class="button01">ジョギング</a> <!-- jogging -->
-            <button type="button" class="button01">ランニング</a> <!-- running -->
+            <button type="button" class="button01">ウォーキング<br><a class="bpm">120BPM</a></a> <!-- working -->
+            <button type="button" class="button01">ジョギング<br><a class="bpm">145BPM</a></a> <!-- jogging -->
+            <button type="button" class="button01">ランニング<br><a class="bpm">170BPM</a></a> <!-- running -->
             </div>
             <input type="hidden" name="exercise" id="exerciseInput">
             </div>
             
             <div class = "combine2">
-            <h3 class="section-title"><i class="fa-regular fa-clock" style="color: #78ff0a;"></i>時間を選択</h3>
+            <h3 class="section-title"><i class="fa-regular fa-clock" style="color: #78ff0a;"></i>時間を選択:<span id="timeValue">60</span>分</h3>
             <div class="time-container">
             <input type="range" id="time" name="time" min="0" max="60" value="5">
-            <span id="timeValue">60</span>
             </div>
             </div>
             
@@ -41,12 +43,15 @@
             <button type="submit" id="playlistLink" class="buttonRec disabled-link">
             プレイリストを生成
             </button>
+            <button type="button" id="shuffleButton" class="buttonRec" style="display:none;">
+            <i class="fa-solid fa-shuffle" style="color: #198900;"></i>シャッフル
+            </button>
             </div>
         </form>
         
+        <div id="result"></div>  <!-- 結果を表示する部分 -->
         <script src="{{ url_for('static', filename='js/script.js') }}"></script>
         <script src="{{ url_for('static', filename='js/slider.js') }}"></script>
-        <div id="result"></div>  <!-- 結果を表示する部分 -->
 
 </body>
 </html>

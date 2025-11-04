@@ -28,6 +28,7 @@ body {
   gap:12px;
   width: 100%;
   justify-content: center;
+  margin-bottom: 40px;
 }
 
  /* ボタンのグループ化 */
@@ -62,6 +63,10 @@ body {
   margin-right: 6px;
 }
 
+.bpm{
+  font-size: 0.8em;
+  color: gainsboro
+}
 
 /* スライダー */
 /* スライダー本体: CSS変数を設定するためのコンテナとして機能 */

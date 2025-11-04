@@ -31,6 +31,7 @@ exerciseButtons.forEach(btn => {
 /*推薦ボタン*/
 const playlistLink = document.getElementById("playlistLink");
 const exerciseForm = document.getElementById("mainForm"); 
+const resultContainer = document.getElementById("result");
 const DISABLED_CLASS = 'disabled-link'; 
 
 // フォームの入力状態をチェックする関数
@@ -50,55 +51,99 @@ function checkFormValidity() {
     }
 }
 
+/*シャッフルボタン*/
+const shuffleBtn = document.getElementById("shuffleButton");
+shuffleBtn.addEventListener("click", shufflePlaylist);
+
+/*音楽リスト保存用*/
+let basePlaylist = [];  // サーバから取得したリスト
+let metaData = {};      // メタ情報
+
+/*プレイリスト表示*/
+function renderPlaylist(data) {
+  if (!data.recommended || data.recommended.length === 0) {
+    resultContainer.innerHTML = "<p>おすすめ曲が見つかりませんでした。</p>";
+    shuffleBtn.style.display = "none";
+    return;
+  }
+
+  const songsHTML = data.recommended
+    .map(
+      (song, index) => `
+        <div class="track">
+          <span class="track-number">${index + 1}</span>
+          <div class="track-title">
+            <span>${song.title}</span>
+            <span class="track-artist">${song.artist}</span>
+          </div>
+          <span class="track-time">${song.hh_mm}</span>
+          <span class="track-bpm">${song.bpm} BPM</span>
+          <a class="open-link" href="${song.spotify_search}" target="_blank" rel="noopener">Spotifyで探す</a>
+        </div>
+      `
+    )
+    .join("");
+
+  resultContainer.innerHTML = `
+    <h2>生成されたプレイリスト</h2>
+    <p>合計再生時間: ${data.total_time}</p>
+    <div class="tracks-list">${songsHTML}</div>
+  `;
+
+  shuffleBtn.style.display = "inline-block";
+}
+
+/*プレイリストシャッフル*/
+function shufflePlaylist() {
+  if (!basePlaylist.length) return;
+
+  const shuffled = [...basePlaylist];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  renderPlaylist({
+    recommended: shuffled,
+    total_time: metaData.total_time
+  });
+}
+
+/*プレイリスト生成*/
 playlistLink.addEventListener("click", async (e) => {
-    // 1. 無効状態なら、リンク移動をキャンセルして処理を終了
-    if (playlistLink.classList.contains(DISABLED_CLASS)) {
-        e.preventDefault(); 
-        return;
-    }
+  e.preventDefault();
 
-    // 2. 有効状態なら、リンク移動をキャンセルし、フォームを送信
-    e.preventDefault(); 
+  if (playlistLink.classList.contains(DISABLED_CLASS)) {
+    return;
+  }
 
-    // フォームデータを取得
-    const formData = new FormData(exerciseForm);
+  const formData = new FormData(exerciseForm);
 
-    // 非同期でFlaskバックエンドにデータを送信
+  try {
     const response = await fetch("/recommend", {
-        method: "POST",
-        body: formData
+      method: "POST",
+      body: formData
     });
 
-    const data = await response.json();  // 結果をJSONとして受け取る
-
-    // 結果表示
-    if (data.error) {
-        document.getElementById("result").innerHTML = `<p style="color:red;">${data.error}</p>`;
-    } else {
-        // 曲情報をリスト形式で表示
-        const recommendedSongs = data.recommended.map((song, index) => `
-            <div class="track">
-                <span class="track-number">${index + 1}</span>
-                <div class="track-title"><!-- タイトルとアーティスト名を前後におく -->
-                    <span>${song.title}</span>  <!-- タイトル -->
-                    <span class="track-artist">${song.artist}</span>  <!-- アーティスト名 -->
-                </div>
-                <span class="track-time">${song.hh_mm}</span>
-                <span class="track-bpm">${song.bpm} BPM</span>
-                <a class="open-link" href="${song.spotify_search}" target="_blank" rel="noopener">Spotifyで探す</a>
-            </div>
-        `).join('');
-
-        // 合計再生時間の表示
-        document.getElementById("result").innerHTML = `
-            <h2>生成されたプレイリスト</h2>
-            <p>合計再生時間: ${data.total_time}</p>
-            <div class="tracks-list">
-                ${recommendedSongs}
-            </div>
-        `;
+    if (!response.ok) {
+      throw new Error(`サーバエラー: ${response.status}`);
     }
-});
 
-// 初期状態のチェック (ページロード時)
-checkFormValidity();
+    const data = await response.json();
+
+    if (data.error) {
+      resultContainer.innerHTML = `<p style="color:red;">${data.error}</p>`;
+      shuffleBtn.style.display = "none";
+      return;
+    }
+    // 結果を保持
+    basePlaylist = data.recommended;
+    metaData = { total_time: data.total_time };
+    // 描画
+    renderPlaylist(data);
+  } catch (err) {
+    console.error("Fetch失敗:", err);
+    resultContainer.innerHTML = `<p style="color:red;">通信エラーが発生しました。</p>`;
+    shuffleBtn.style.display = "none";
+  }
+});
